@@ -24,7 +24,7 @@ exports.createPages = async ({ actions }) => {
     query: gql`
       ${NEWS_ARTICLE_LIST_QUERY}
     `,
-    variables: { limit: 100, skip: 0, from: "2018", to: "2021" },
+    variables: { limit: 100, skip: 0, from: "2020", to: "2021" },
   })
 
   await Promise.all(
@@ -39,6 +39,14 @@ exports.createPages = async ({ actions }) => {
           locale: "en",
           preview: false,
         },
+      })
+
+      actions.createRedirect({
+        fromPath:
+          "about/media/news-article/" + slug.replace("about/media/news/", ""),
+        toPath: slug,
+        isPermanent: true,
+        statusCode: 301,
       })
 
       return actions.createPage({

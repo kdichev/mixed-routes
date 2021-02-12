@@ -1,30 +1,30 @@
 import React from "react"
 import { RouteComponentProps, WindowLocation } from "@reach/router"
-import { useQuery, gql } from "@apollo/client"
+import { useQuery, gql, useLazyQuery } from "@apollo/client"
 import { NewsArticleBase } from "./news-article-base"
-import { navigate } from "gatsby"
+import { useSlugQuery } from "./slug-query"
 
-type NewsArticleProps = React.FC<
-  RouteComponentProps & { location?: WindowLocation<{ id: string }> }
->
+type NewsArticleProps = React.FC<RouteComponentProps>
 
-const NewsArticle: NewsArticleProps = ({ location, staticPages, ...rest }) => {
-  const { loading, error, data } = useQuery(NEWS_ARTICLE, {
-    variables: { id: location.state?.id || "" },
-  })
+const NewsArticle: NewsArticleProps = ({ slug }) => {
+  const { data: test } = useSlugQuery({ slug })
+  const [getArticle, { loading, error, data }] = useLazyQuery(NEWS_ARTICLE)
   React.useEffect(() => {
-    if (staticPages.includes(`/about/media/news/${rest.slug}`)) {
-      navigate(`/about/media/news/${rest.slug}`, { replace: true })
+    if (test?.urlSlugCollection.items[0].page.sys.id) {
+      getArticle({
+        variables: { id: test?.urlSlugCollection.items[0].page.sys.id },
+      })
     }
-  }, [])
+  }, [test?.urlSlugCollection.items[0].page.sys.id])
   if (loading) return <p>Loading...</p>
-  if (error) return <p>Error...</p>
+  if (error) return <p>Error... {error.message}</p>
+  if (!data) return null
   const { newsArticle } = data
   return <NewsArticleBase {...newsArticle} />
 }
 
 const NEWS_ARTICLE = gql`
-  query NewsArticle(
+  query NEWS_ARTICLE(
     $id: String!
     $locale: String = "en"
     $preview: Boolean = false
